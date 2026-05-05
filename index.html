@@ -88,6 +88,7 @@ body {
   gap: 10px;
   overflow: hidden;
   flex-wrap: nowrap;
+  margin-bottom: 20px; /* ← 余白追加ここ */
 }
 
 .users.expanded {
@@ -120,14 +121,27 @@ body {
   cursor: pointer;
 }
 
-/* ボタン */
-.submit {
-  margin-top: 10px;
-  padding: 8px;
-  background: #7edbff;
+/* 入力 */
+.input-area {
+  text-align: center;
+  margin-top: 10px; /* ← 少し余白追加 */
+}
+
+input {
+  width: 80%;
+  padding: 10px;
   border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.submit {
+  margin-top: 12px;
+  padding: 10px;
+  background: #7edbff;
+  border-radius: 10px;
   cursor: pointer;
   color: white;
+  font-weight: bold;
 }
 
 /* 展開 */
@@ -142,6 +156,7 @@ body {
 .success {
   text-align: center;
   color: #0077aa;
+  margin-bottom: 10px;
 }
 </style>
 </head>
@@ -173,8 +188,8 @@ body {
 
     <div class="users" id="users"></div>
 
-    <div style="text-align:center; margin-top:10px;">
-      <input id="name" placeholder="名前">
+    <div class="input-area" id="inputArea">
+      <input id="name" placeholder="自分だと分かる名前">
       <div class="submit" onclick="join()">参加予定</div>
     </div>
 
@@ -256,7 +271,7 @@ onSnapshot(ref, (snap) => {
   list.sort(a => a.id === myId ? -1 : 1);
 
   const countNum = list.length;
-  count.innerText = `${countNum} / 16（残り${16-countNum}）`;
+  count.innerText = `${countNum} / 16`;
 
   users.innerHTML = "";
 
@@ -276,24 +291,26 @@ onSnapshot(ref, (snap) => {
     users.appendChild(el);
   });
 
-  /* 省略表示 */
   if (isMobile && list.length > 5) {
     const more = document.createElement("div");
     more.className = "more";
 
     if (!expanded) {
       more.innerText = `+${list.length-5} ＞`;
-      more.onclick = () => {
-        expanded = true;
-      };
+      more.onclick = () => expanded = true;
     } else {
       more.innerText = "＜";
-      more.onclick = () => {
-        expanded = false;
-      };
+      more.onclick = () => expanded = false;
     }
 
     users.appendChild(more);
+  }
+
+  if (list.find(u => u.id === myId)) {
+    showSuccess();
+    inputArea.style.display = "none";
+  } else {
+    inputArea.style.display = "block";
   }
 });
 </script>
