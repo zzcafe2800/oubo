@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>応募ページ</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: url("oubo.png") center/cover no-repeat;
+  height: 100vh;
+  color: white;
+  overflow: hidden;
+}
+
+/* 上のタイトル */
+.title-wrap {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  text-align: center;
+  padding-top: 40px;
+  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0));
+}
+
+.title {
+  font-size: 40px;
+  font-weight: bold;
+}
+
+.sub {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  font-size: 12px;
+}
+
+/* 中央 */
+.center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.date {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.join-btn {
+  font-size: 28px;
+  cursor: pointer;
+  border-bottom: 2px solid white;
+  display: inline-block;
+}
+
+/* モーダル */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(6px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.card {
+  background: white;
+  color: black;
+  width: 600px;
+  padding: 20px;
+  border-radius: 10px;
+  position: relative;
+}
+
+/* ウィンドウ風バー */
+.card-header {
+  background: #aee3f5;
+  padding: 5px;
+  margin: -20px -20px 10px -20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.close {
+  cursor: pointer;
+}
+
+/* 参加者 */
+.users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.user {
+  text-align: center;
+  width: 60px;
+}
+
+.cat {
+  width: 40px;
+  height: 40px;
+  background: #eee;
+  border-radius: 50%;
+  margin: auto;
+}
+
+/* 入力 */
+.input-area {
+  margin-top: 20px;
+  text-align: center;
+}
+
+input {
+  padding: 8px;
+  width: 60%;
+}
+
+.submit {
+  margin-top: 10px;
+  cursor: pointer;
+  color: #00a;
+}
+</style>
+</head>
+
+<body>
+
+<div class="title-wrap">
+  <div class="title">第１回コスプレイベント『天気の子』</div>
+</div>
+
+<div class="sub">非公式</div>
+
+<div class="center">
+  <div class="date">10日 21時</div>
+  <div class="join-btn" onclick="openModal()">参加する</div>
+</div>
+
+<!-- モーダル -->
+<div class="modal" id="modal">
+  <div class="card">
+    <div class="card-header">
+      <span class="close" onclick="closeModal()">✕</span>
+    </div>
+
+    <div class="users" id="users"></div>
+
+    <div class="input-area">
+      <div style="font-size:12px; opacity:0.7;">
+        自分だと分かるものなら何でもOK
+      </div>
+
+      <input id="name" placeholder="名前を入力">
+
+      <div class="submit" onclick="join()">参加予定</div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD2JwCj8pLomK5vDok4ul-e41ByhnFHJo4",
+  authDomain: "oubo-b776a.firebaseapp.com",
+  projectId: "oubo-b776a",
+  storageBucket: "oubo-b776a.firebasestorage.app",
+  messagingSenderId: "64813076994",
+  appId: "1:64813076994:web:ed771e7d89c67ba96f8d1b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const usersRef = collection(db, "participants");
+
+/* モーダル */
+window.openModal = () => {
+  document.getElementById("modal").style.display = "flex";
+};
+
+window.closeModal = () => {
+  document.getElementById("modal").style.display = "none";
+};
+
+/* 参加 */
+window.join = async () => {
+  const name = document.getElementById("name").value;
+
+  if (!name) {
+    alert("名前を入れてください");
+    return;
+  }
+
+  await addDoc(usersRef, { name });
+
+  alert("応募が完了しました\n予定なので無理に参加しなくてもOKです！");
+};
+
+/* リアルタイム表示 */
+onSnapshot(usersRef, (snapshot) => {
+  const usersDiv = document.getElementById("users");
+  usersDiv.innerHTML = "";
+
+  snapshot.forEach((docData) => {
+    const data = docData.data();
+
+    const el = document.createElement("div");
+    el.className = "user";
+
+    el.innerHTML = `
+      <div class="cat"></div>
+      <div>${data.name}</div>
+    `;
+
+    usersDiv.appendChild(el);
+  });
+});
+</script>
+
+</body>
+</html>
