@@ -3,16 +3,16 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>応募ページ</title>
 
 <style>
 body {
   margin: 0;
-  font-family: "Segoe UI", sans-serif;
+  font-family: sans-serif;
   background: url("oubo.png") center/cover no-repeat;
   height: 100vh;
   color: white;
-  overflow: hidden;
 }
 
 /* タイトル */
@@ -21,13 +21,12 @@ body {
   top: 0;
   width: 100%;
   text-align: center;
-  padding-top: 40px;
-  background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0));
+  padding-top: 30px;
+  background: linear-gradient(rgba(0,0,0,0.6), transparent);
 }
 
 .title {
-  font-size: 42px;
-  font-weight: bold;
+  font-size: clamp(22px, 5vw, 42px);
 }
 
 .sub {
@@ -46,21 +45,15 @@ body {
   text-align: center;
 }
 
-.date {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
 .join-btn {
-  font-size: 28px;
-  cursor: pointer;
+  font-size: clamp(20px, 4vw, 28px);
   border-bottom: 2px solid white;
+  cursor: pointer;
 }
 
 /* モーダル */
 .modal {
   position: fixed;
-  top: 0;
   width: 100%;
   height: 100%;
   backdrop-filter: blur(8px);
@@ -70,45 +63,31 @@ body {
 }
 
 .card {
-  background: #ffffff;
-  color: #333;
-  width: 650px;
+  width: min(90%, 600px);
+  background: white;
+  color: black;
+  border-radius: 12px;
   padding: 20px;
-  border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
-/* ウィンドウバー */
+/* ヘッダー */
 .card-header {
-  background: #c9f0ff;
+  background: #d8f3ff;
+  margin: -20px -20px 10px -20px;
   padding: 6px;
-  margin: -20px -20px 15px -20px;
   display: flex;
   justify-content: space-between;
-  font-size: 14px;
-}
-
-.close {
-  cursor: pointer;
-}
-
-/* 参加者欄 */
-.section-title {
-  font-size: 14px;
-  margin-bottom: 8px;
-  color: #666;
 }
 
 .users {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 15px;
+  gap: 10px;
 }
 
 .user {
-  text-align: center;
   width: 60px;
+  text-align: center;
   position: relative;
 }
 
@@ -117,7 +96,6 @@ body {
   height: 50px;
   background: #eaf9ff;
   border-radius: 50%;
-  border: 2px solid #bdefff;
   margin: auto;
 }
 
@@ -127,41 +105,35 @@ body {
   overflow: hidden;
 }
 
-/* 自分の削除 */
 .remove {
   position: absolute;
   top: -5px;
   right: -5px;
-  font-size: 10px;
   cursor: pointer;
-  background: #fff;
-  border-radius: 50%;
-  padding: 2px 5px;
 }
 
 /* 入力 */
 .input-area {
   text-align: center;
+  margin-top: 10px;
 }
 
 input {
-  padding: 10px;
-  width: 60%;
-  border-radius: 8px;
-  border: 1px solid #ddd;
+  width: 80%;
+  padding: 8px;
 }
 
 .submit {
   margin-top: 10px;
+  color: #00a;
   cursor: pointer;
-  color: #00aaff;
 }
 
-/* 完了メッセージ */
+/* メッセージ */
 .success {
   text-align: center;
-  font-size: 14px;
   color: #0077aa;
+  font-size: 14px;
   margin-bottom: 10px;
 }
 </style>
@@ -176,26 +148,24 @@ input {
 <div class="sub">非公式</div>
 
 <div class="center">
-  <div class="date">10日 21時</div>
+  <div>10日 21時</div>
   <div class="join-btn" onclick="openModal()">参加する</div>
 </div>
 
-<!-- モーダル -->
 <div class="modal" id="modal">
   <div class="card">
 
     <div class="card-header">
       <div>参加者</div>
-      <div class="close" onclick="closeModal()">✕</div>
+      <div onclick="closeModal()">✕</div>
     </div>
 
-    <div id="successMsg" class="success"></div>
+    <div id="success" class="success"></div>
 
     <div class="users" id="users"></div>
 
-    <div class="input-area">
+    <div class="input-area" id="inputArea">
       <input id="name" placeholder="自分だと分かる名前">
-
       <div class="submit" onclick="join()">参加予定</div>
     </div>
 
@@ -204,17 +174,20 @@ input {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import {
+  getFirestore, collection, addDoc,
+  onSnapshot, deleteDoc, doc, getDocs
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD2JwCj8pLomK5vDok4ul-e41ByhnFHJo4",
+  apiKey: "AIzaSy...",
   authDomain: "oubo-b776a.firebaseapp.com",
   projectId: "oubo-b776a"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const usersRef = collection(db, "participants");
+const ref = collection(db, "participants");
 
 let myId = localStorage.getItem("myId");
 
@@ -229,19 +202,28 @@ window.closeModal = () => {
 
 /* 参加 */
 window.join = async () => {
-  const name = document.getElementById("name").value;
+  const name = document.getElementById("name").value.trim();
+  if (!name) return alert("名前を入れてください");
 
-  if (!name) {
-    alert("名前を入れてください");
+  const snapshot = await getDocs(ref);
+
+  if (snapshot.size >= 16) {
+    alert("定員です（最大16人）");
     return;
   }
 
-  const docRef = await addDoc(usersRef, { name });
-  localStorage.setItem("myId", docRef.id);
-  myId = docRef.id;
+  for (const d of snapshot.docs) {
+    if (d.data().name === name) {
+      alert("同じ名前は使えません");
+      return;
+    }
+  }
 
-  document.getElementById("successMsg").innerText =
-    "参加予定になりました\n事前準備としてキャラクターのコスプレアバターの準備をお願いします【任意】";
+  const docRef = await addDoc(ref, { name });
+  myId = docRef.id;
+  localStorage.setItem("myId", myId);
+
+  showSuccess();
 };
 
 /* 削除 */
@@ -250,33 +232,42 @@ window.removeMe = async () => {
   await deleteDoc(doc(db, "participants", myId));
   localStorage.removeItem("myId");
   myId = null;
-  document.getElementById("successMsg").innerText = "";
+  document.getElementById("success").innerText = "";
+  document.getElementById("inputArea").style.display = "block";
 };
 
-/* 表示 */
-onSnapshot(usersRef, (snapshot) => {
-  const usersDiv = document.getElementById("users");
-  usersDiv.innerHTML = "";
+/* 成功UI */
+function showSuccess() {
+  document.getElementById("success").innerText =
+    "参加予定になりました\nコスプレアバターの準備をお願いします【任意】";
+  document.getElementById("inputArea").style.display = "none";
+}
 
-  snapshot.forEach((d) => {
+/* 表示 */
+onSnapshot(ref, (snap) => {
+  const users = document.getElementById("users");
+  users.innerHTML = "";
+
+  let foundMe = false;
+
+  snap.forEach((d) => {
     const data = d.data();
+
+    if (d.id === myId) foundMe = true;
 
     const el = document.createElement("div");
     el.className = "user";
 
-    let removeBtn = "";
-    if (d.id === myId) {
-      removeBtn = `<div class="remove" onclick="removeMe()">×</div>`;
-    }
-
     el.innerHTML = `
-      ${removeBtn}
+      ${d.id === myId ? `<div class="remove" onclick="removeMe()">×</div>` : ""}
       <div class="cat"></div>
       <div class="name">${data.name}</div>
     `;
 
-    usersDiv.appendChild(el);
+    users.appendChild(el);
   });
+
+  if (foundMe) showSuccess();
 });
 </script>
 
